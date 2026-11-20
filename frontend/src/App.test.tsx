@@ -41,6 +41,29 @@ describe('App', () => {
     expect(await screen.findByLabelText('Cut-off time')).toBeInTheDocument()
   })
 
+  it('failedLogoutStaysLoggedInAndSaysSo', async () => {
+    setMockLoggedIn(true)
+    server.use(http.post('/api/admin/logout', () => new HttpResponse(null, { status: 500 })))
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Log out' }))
+
+    expect(await screen.findByText('Could not log out. Please try again.')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Menu' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Log in' })).not.toBeInTheDocument()
+  })
+
+  it('logoutReturnsToLogin', async () => {
+    setMockLoggedIn(true)
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Log out' }))
+
+    expect(await screen.findByRole('button', { name: 'Log in' })).toBeInTheDocument()
+  })
+
   it('returnsToLoginWhenSessionExpires', async () => {
     setMockLoggedIn(true)
     server.use(http.get('/api/admin/orders/today', () => new HttpResponse(null, { status: 401 })))

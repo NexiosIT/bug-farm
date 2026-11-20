@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { logout, me } from './api'
+import { logout, me, UnauthorizedError } from './api'
 import { LoginPage } from './LoginPage'
 import { MenuPage } from './MenuPage'
 import { OrdersPage } from './OrdersPage'
@@ -35,11 +35,20 @@ export default function App() {
   /** Called by pages when the server answers 401 (session expired). */
   const onUnauthorized = useCallback(() => setSession({ state: 'loggedOut' }), [])
 
+  const [logoutError, setLogoutError] = useState<string | null>(null)
+
   async function doLogout() {
+    setLogoutError(null)
     try {
       await logout()
-    } finally {
       setSession({ state: 'loggedOut' })
+    } catch (e) {
+      if (e instanceof UnauthorizedError) {
+        setSession({ state: 'loggedOut' })
+      } else {
+        // The server session may still be alive: don't pretend the user is logged out.
+        setLogoutError('Could not log out. Please try again.')
+      }
     }
   }
 
@@ -65,6 +74,7 @@ export default function App() {
           {session.username} <button onClick={() => void doLogout()}>Log out</button>
         </span>
       </header>
+      {logoutError && <p role="alert">{logoutError}</p>}
       <section role="tabpanel">{renderTab(tab, onUnauthorized)}</section>
     </div>
   )

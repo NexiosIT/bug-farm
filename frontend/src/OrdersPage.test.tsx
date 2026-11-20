@@ -61,6 +61,57 @@ describe('OrdersPage', () => {
     expect(await screen.findByText('Order Lunch, Fri 20 Nov')).toBeInTheDocument()
   })
 
+  it('openDraftRefreshesAfterRemovingAnOrder', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    render(<OrdersPage onUnauthorized={vi.fn()} />)
+    await user.click(await screen.findByRole('button', { name: 'Draft email' }))
+    expect(await screen.findByText(/Anna de Vries: Tuna/)).toBeInTheDocument()
+
+    const anna = screen.getByRole('row', { name: /Anna de Vries/ })
+    await user.click(within(anna).getByRole('button', { name: 'Remove' }))
+
+    await vi.waitFor(() => {
+      expect(screen.getByText(/Bram Jansen: Ham & cheese/)).toBeInTheDocument()
+      expect(screen.queryByText(/Anna de Vries: Tuna/)).not.toBeInTheDocument()
+    })
+  })
+
+  it('draftEmailButtonReloadsTheDraft', async () => {
+    const user = userEvent.setup()
+    let subject = 'Before cut-off'
+    server.use(
+      http.get('/api/admin/email-draft', () =>
+        HttpResponse.json({ to: 'a@b.example', subject, body: '', final: false }),
+      ),
+    )
+    render(<OrdersPage onUnauthorized={vi.fn()} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Draft email' }))
+    expect(await screen.findByText('Before cut-off')).toBeInTheDocument()
+    subject = 'After cut-off'
+    await user.click(screen.getByRole('button', { name: 'Draft email' }))
+    expect(await screen.findByText('After cut-off')).toBeInTheDocument()
+  })
+
+  it('failedRemoveKeepsErrorVisible', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    server.use(
+      http.delete('/api/admin/orders/:id', () => HttpResponse.json({ error: 'Boom' }, { status: 500 })),
+    )
+    render(<OrdersPage onUnauthorized={vi.fn()} />)
+    const anna = await screen.findByRole('row', { name: /Anna de Vries/ })
+
+    await user.click(within(anna).getByRole('button', { name: 'Remove' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("Could not remove Anna de Vries's order: Boom")
+    // Still visible after the follow-up reload has finished.
+    await new Promise((r) => setTimeout(r, 200))
+    expect(screen.getByRole('alert')).toHaveTextContent("Could not remove Anna de Vries's order: Boom")
+    expect(screen.getByRole('row', { name: /Anna de Vries/ })).toBeInTheDocument()
+  })
+
   it('callsOnUnauthorizedOn401', async () => {
     setMockLoggedIn(false)
     const onUnauthorized = vi.fn()

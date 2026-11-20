@@ -8,14 +8,22 @@ interface Props {
 }
 
 export function OrdersPage({ onUnauthorized }: Props) {
-  const { data, error, setError, reload, run } = useApiData(todayOrders, onUnauthorized)
-  const [showDraft, setShowDraft] = useState(false)
+  const { data, error, reload, run } = useApiData(todayOrders, onUnauthorized)
+  // Kept apart from the load error, which a successful reload clears.
+  const [actionError, setActionError] = useState<string | null>(null)
+  // Bumping the version remounts EmailDraftView, so the draft is fetched again.
+  const [draftVersion, setDraftVersion] = useState(0)
 
   async function remove(order: OrderView) {
     if (!window.confirm(`Remove ${order.displayName}'s order?`)) return
-    await run(() => deleteOrder(order.id), setError)
+    setActionError(null)
+    await run(
+      () => deleteOrder(order.id),
+      (message) => setActionError(`Could not remove ${order.displayName}'s order: ${message}`),
+    )
     // Reload either way: after a 404 the order was already gone.
     await reload()
+    setDraftVersion((v) => (v === 0 ? 0 : v + 1))
   }
 
   if (!data) return error ? <p role="alert">{error}</p> : <p>Loading orders…</p>
@@ -26,6 +34,7 @@ export function OrdersPage({ onUnauthorized }: Props) {
       <h1>Lunch orders · {data.date}</h1>
       <p>{data.open ? `Ordering open until ${data.cutOff}` : 'Ordering closed'}</p>
       {error && <p role="alert">{error}</p>}
+      {actionError && <p role="alert">{actionError}</p>}
       <table>
         <thead>
           <tr>
@@ -55,10 +64,11 @@ export function OrdersPage({ onUnauthorized }: Props) {
       <p>
         {count} {count === 1 ? 'order' : 'orders'}
       </p>
-      <button type="button" onClick={() => setShowDraft(true)} disabled={showDraft}>
+      {/* Clicking again fetches a fresh draft (e.g. after the cut-off has passed). */}
+      <button type="button" onClick={() => setDraftVersion((v) => v + 1)}>
         Draft email
       </button>
-      {showDraft && <EmailDraftView onUnauthorized={onUnauthorized} />}
+      {draftVersion > 0 && <EmailDraftView key={draftVersion} onUnauthorized={onUnauthorized} />}
     </div>
   )
 }
