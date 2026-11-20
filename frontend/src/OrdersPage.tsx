@@ -26,13 +26,21 @@ export function OrdersPage({ onUnauthorized }: Props) {
     setDraftVersion((v) => (v === 0 ? 0 : v + 1))
   }
 
-  if (!data) return error ? <p role="alert">{error}</p> : <p>Loading orders…</p>
+  if (!data) return error ? <p role="alert">{error}</p> : <p className="quiet">Loading orders…</p>
 
   const count = data.orders.length
   return (
     <div>
-      <h1>Lunch orders · {data.date}</h1>
-      <p>{data.open ? `Ordering open until ${data.cutOff}` : 'Ordering closed'}</p>
+      <div className="page-head">
+        <div>
+          <p className="eyebrow">— Today</p>
+          <h1>Lunch orders · {data.date}</h1>
+          <p className={data.open ? 'status status-open' : 'status'}>
+            {data.open ? `Ordering open until ${data.cutOff}` : 'Ordering closed'}
+          </p>
+        </div>
+        <p className="stat">{`${count} ${count === 1 ? 'order' : 'orders'}`}</p>
+      </div>
       {error && <p role="alert">{error}</p>}
       {actionError && <p role="alert">{actionError}</p>}
       <table>
@@ -42,32 +50,41 @@ export function OrdersPage({ onUnauthorized }: Props) {
             <th>Food type</th>
             <th>Item</th>
             <th>Notes</th>
-            <th />
+            <th>
+              <span className="visually-hidden">Actions</span>
+            </th>
           </tr>
         </thead>
         <tbody>
           {data.orders.map((order) => (
             <tr key={order.id}>
-              <td>{order.displayName}</td>
+              <td className="name-cell">{order.displayName}</td>
               <td>{order.foodType}</td>
               <td>{order.item}</td>
-              <td>{order.notes}</td>
+              <td className={order.notes ? undefined : 'empty-cell'}>{order.notes || '—'}</td>
               <td>
-                <button type="button" onClick={() => void remove(order)}>
+                <button type="button" className="btn btn-quiet btn-danger" onClick={() => void remove(order)}>
                   Remove
                 </button>
               </td>
             </tr>
           ))}
+          {count === 0 && (
+            <tr>
+              <td colSpan={5} className="empty-cell">
+                No orders yet today.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
-      <p>
-        {count} {count === 1 ? 'order' : 'orders'}
-      </p>
-      {/* Clicking again fetches a fresh draft (e.g. after the cut-off has passed). */}
-      <button type="button" onClick={() => setDraftVersion((v) => v + 1)}>
-        Draft email
-      </button>
+      <div className="table-foot">
+        <p className="quiet">Removing an order also updates the draft email.</p>
+        {/* Clicking again fetches a fresh draft (e.g. after the cut-off has passed). */}
+        <button type="button" className="btn btn-primary" onClick={() => setDraftVersion((v) => v + 1)}>
+          Draft email
+        </button>
+      </div>
       {draftVersion > 0 && <EmailDraftView key={draftVersion} onUnauthorized={onUnauthorized} />}
     </div>
   )
