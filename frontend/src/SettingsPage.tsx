@@ -33,18 +33,24 @@ export function SettingsPage({ onUnauthorized }: Props) {
     else setError(result.error)
   }
 
-  if (!settings && !error) return <p>Loading settings…</p>
+  if (!settings && !error) return <p className="quiet">Loading settings…</p>
 
   return (
     <div>
-      <h1>Settings</h1>
-      <form className="stack" onSubmit={submit} noValidate>
+      <div className="page-head">
+        <div>
+          <p className="eyebrow">— Ordering rules</p>
+          <h1>Settings</h1>
+          <p className="lead">The cut-off decides when the bot stops taking orders. The draft email goes to the shop address.</p>
+        </div>
+      </div>
+      <form className="settings-form" onSubmit={submit} noValidate>
         <label>
           Cut-off time
           <input
             value={cutOff}
             onChange={(e) => setCutOff(e.target.value)}
-            placeholder="HH:mm"
+            placeholder="HH:mm, e.g. 10:00"
             inputMode="numeric"
           />
         </label>
@@ -52,10 +58,10 @@ export function SettingsPage({ onUnauthorized }: Props) {
           Shop email address
           <input type="email" value={shopEmail} onChange={(e) => setShopEmail(e.target.value)} />
         </label>
-        <div>
-          <button type="submit" disabled={busy || !settings}>
+        <div className="form-actions">
+          <button type="submit" className="btn btn-primary" disabled={busy || !settings}>
             Save
-          </button>{' '}
+          </button>
           {saved && <span role="status">Saved.</span>}
         </div>
         {error && <p role="alert">{error}</p>}

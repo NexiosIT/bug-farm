@@ -36,20 +36,30 @@ export function MenuPage({ onUnauthorized }: Props) {
     return message ?? (outcome || null)
   }
 
-  if (!menu) return error ? <p role="alert">{error}</p> : <p>Loading menu…</p>
+  if (!menu) return error ? <p role="alert">{error}</p> : <p className="quiet">Loading menu…</p>
 
   return (
     <div>
-      <h1>Menu</h1>
+      <div className="page-head">
+        <div>
+          <p className="eyebrow">— Ordering options</p>
+          <h1>Menu</h1>
+          <p className="lead">Orders keep the name they were placed with, so renaming or removing an item never changes an existing order.</p>
+        </div>
+      </div>
       {error && <p role="alert">{error}</p>}
-      {menu.map((foodType) => (
-        <FoodTypeSection key={foodType.id} foodType={foodType} mutate={mutate} />
-      ))}
-      <AddForm
-        label="New food type"
-        button="Add food type"
-        onAdd={(name) => mutate(async () => messageFor(await createFoodType(name)))}
-      />
+      <div className="menu-grid">
+        {menu.map((foodType) => (
+          <FoodTypeSection key={foodType.id} foodType={foodType} mutate={mutate} />
+        ))}
+      </div>
+      <div className="new-food-type">
+        <AddForm
+          label="New food type"
+          button="Add food type"
+          onAdd={(name) => mutate(async () => messageFor(await createFoodType(name)))}
+        />
+      </div>
     </div>
   )
 }
@@ -82,20 +92,31 @@ function FoodTypeSection({ foodType, mutate }: { foodType: FoodType; mutate: Mut
           }}
         />
       ) : (
-        <h2>
-          {foodType.name}{' '}
-          <button type="button" aria-label={`Rename ${foodType.name}`} onClick={() => setRenaming(true)}>
+        <div className="food-type-head">
+          <h2>{foodType.name}</h2>
+          <button
+            type="button"
+            className="btn btn-quiet"
+            aria-label={`Rename ${foodType.name}`}
+            onClick={() => setRenaming(true)}
+          >
             Rename
-          </button>{' '}
-          <button type="button" aria-label={`Remove ${foodType.name}`} onClick={() => void remove()}>
+          </button>
+          <button
+            type="button"
+            className="btn btn-quiet btn-danger"
+            aria-label={`Remove ${foodType.name}`}
+            onClick={() => void remove()}
+          >
             Remove
           </button>
-        </h2>
+        </div>
       )}
-      <ul>
+      <ul className="item-list">
         {foodType.items.map((item) => (
           <ItemRow key={item.id} item={item} act={act} />
         ))}
+        {foodType.items.length === 0 && <li className="empty">No items yet.</li>}
       </ul>
       <AddForm
         label={`New item for ${foodType.name}`}
@@ -126,11 +147,16 @@ function ItemRow({ item, act }: { item: Item; act: (call: () => Promise<Outcome 
 
   return (
     <li>
-      <span>{item.name}</span>{' '}
-      <button type="button" aria-label={`Rename ${item.name}`} onClick={() => setRenaming(true)}>
+      <span>{item.name}</span>
+      <button type="button" className="btn btn-quiet" aria-label={`Rename ${item.name}`} onClick={() => setRenaming(true)}>
         Rename
-      </button>{' '}
-      <button type="button" aria-label={`Remove ${item.name}`} onClick={() => void act(() => deleteItem(item.id))}>
+      </button>
+      <button
+        type="button"
+        className="btn btn-quiet btn-danger"
+        aria-label={`Remove ${item.name}`}
+        onClick={() => void act(() => deleteItem(item.id))}
+      >
         Remove
       </button>
     </li>
@@ -158,7 +184,7 @@ function AddForm({ label, button, onAdd }: { label: string; button: string; onAd
         {label}
         <input value={name} onChange={(e) => setName(e.target.value)} />
       </label>
-      <button type="submit" disabled={busy}>
+      <button type="submit" className="btn" disabled={busy}>
         {button}
       </button>
       {message && <p role="alert">{message}</p>}
@@ -188,8 +214,10 @@ function RenameForm({
         New name for {current}
         <input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
       </label>
-      <button type="submit">Save</button>
-      <button type="button" onClick={onCancel}>
+      <button type="submit" className="btn btn-primary">
+        Save
+      </button>
+      <button type="button" className="btn btn-quiet" onClick={onCancel}>
         Cancel
       </button>
     </form>
