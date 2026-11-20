@@ -4,6 +4,7 @@ import { LoginPage } from './LoginPage'
 import { MenuPage } from './MenuPage'
 import { OrdersPage } from './OrdersPage'
 import { SettingsPage } from './SettingsPage'
+import wordmark from './assets/nexios-wordmark-white.webp'
 
 type Tab = 'orders' | 'menu' | 'settings'
 
@@ -52,30 +53,44 @@ export default function App() {
     }
   }
 
-  if (session.state === 'loading') return <p>Loading…</p>
+  if (session.state === 'loading') return <p className="page quiet">Loading…</p>
   if (session.state === 'loggedOut') return <LoginPage onLoggedIn={() => void refreshSession()} />
 
   return (
     <div className="app">
-      <header>
-        <nav role="tablist">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              role="tab"
-              aria-selected={tab === t.id}
-              onClick={() => setTab(t.id)}
-            >
-              {t.label}
+      <header className="topbar">
+        <div className="topbar-inner">
+          <div className="brand">
+            <img className="wordmark" src={wordmark} alt="Nexios" />
+            <span className="brand-product">Lunch admin</span>
+          </div>
+          <nav role="tablist" aria-label="Sections">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.id}
+                onClick={() => setTab(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </nav>
+          <span className="user">
+            {session.username}{' '}
+            <button type="button" className="btn btn-quiet" onClick={() => void doLogout()}>
+              Log out
             </button>
-          ))}
-        </nav>
-        <span className="user">
-          {session.username} <button onClick={() => void doLogout()}>Log out</button>
-        </span>
+          </span>
+        </div>
       </header>
-      {logoutError && <p role="alert">{logoutError}</p>}
-      <section role="tabpanel">{renderTab(tab, onUnauthorized)}</section>
+      <main className="page">
+        {logoutError && <p role="alert">{logoutError}</p>}
+        <section role="tabpanel" className="panel">
+          {renderTab(tab, onUnauthorized)}
+        </section>
+      </main>
     </div>
   )
 }
