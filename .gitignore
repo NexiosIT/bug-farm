@@ -6,3 +6,4 @@ dist/
 /data/
 /app/data/
 .superpowers/
+.env

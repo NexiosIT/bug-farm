@@ -75,7 +75,46 @@ java -jar app/target/lunch-app-0.0.1-SNAPSHOT.jar
 - Frontend development without the backend: `VITE_MOCK=1 npm --prefix frontend run dev`.
   With the backend running, `npm --prefix frontend run dev` proxies `/api` to port 8080.
 
-## Connect Teams (laptop + tunnel)
+## Run with Docker (app + PostgreSQL + tunnel)
+
+Only Docker is needed; no Java, Node or database on your machine.
+
+1. `cp .env.example .env` and fill it in. `.env` is git-ignored; never commit it.
+   - `POSTGRES_PASSWORD`: any long random string.
+   - `LUNCH_ADMIN_PASSWORD_HASH`: make the hash with Docker (replace `YOUR-PASSWORD`):
+     ```bash
+     docker run --rm httpd:2.4-alpine htpasswd -bnBC 10 "" 'YOUR-PASSWORD' | tr -d ':\r\n'
+     ```
+     (In Git Bash, put `MSYS_NO_PATHCONV=1 ` in front.) It prints a hash starting with `$2y$10$`.
+     Paste it **inside the single quotes**. Without them Docker Compose expands the `$` signs
+     and nobody can log in.
+   - `NGROK_AUTHTOKEN` and `NGROK_DOMAIN`: from the ngrok dashboard (Authtoken, and your
+     fixed domain under Domains). `NGROK_DOMAIN` is the host name only, e.g.
+     `calm-otter-123.ngrok-free.app`.
+2. `docker compose up -d --build`
+3. Admin screen: http://localhost:8080. Teams webhook callback URL:
+   `https://<NGROK_DOMAIN>/api/teams/webhook`.
+
+- `docker compose logs -f app` shows the app's log.
+- `docker compose down` stops everything and **keeps** the data (volume `lunch-db`);
+  `docker compose down -v` deletes the data too.
+- The tunnel makes the whole app public, admin screen included: use a strong admin password.
+- If a required setting is missing, `docker compose` stops and names it. Every `docker compose`
+  command (also `ps` and `logs`) reads the whole file, so fill in all required settings first.
+- `docker compose config` prints your secrets: don't share its output.
+
+### Connect Teams when running in Docker
+
+The tunnel already runs on your fixed domain, so don't start `ngrok http` yourself.
+
+1. In the **Lunch** team: **⋯ → Manage team → Apps → Create an outgoing webhook**, name
+   `SandwichBot`, callback URL `https://<NGROK_DOMAIN>/api/teams/webhook`.
+2. Put the security token Teams shows into `LUNCH_TEAMS_SECURITY_TOKEN` in `.env`.
+3. Run `docker compose up -d` (**not** `docker compose restart`: restart keeps the old settings,
+   and the bot then rejects every message without saying why).
+4. Continue with steps 5 and 6 below (menu items, then try the bot in Sandwishes).
+
+## Connect Teams (laptop + tunnel, without Docker)
 
 1. Start the app (above).
 2. Start a tunnel: `ngrok http 8080`. Note the `https://….ngrok…` address.
