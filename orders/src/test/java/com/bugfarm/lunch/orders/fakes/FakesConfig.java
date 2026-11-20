@@ -7,8 +7,8 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
 /**
- * Stand-ins for what other parts provide at runtime: the menu, the ordering window, the AI
- * interpreter (admin) and the Clock (app). The clock is Fri 20 Nov 2026, 09:30 in Brussels.
+ * Stand-ins for what other parts provide at runtime: the menu and the ordering window (admin)
+ * and the Clock (app). The clock is Fri 20 Nov 2026, 09:30 in Brussels.
  */
 @TestConfiguration(proxyBeanMethods = false)
 public class FakesConfig {
@@ -23,11 +23,6 @@ public class FakesConfig {
     @Bean
     FakeOrderingWindow fakeOrderingWindow() {
         return new FakeOrderingWindow();
-    }
-
-    @Bean
-    FakeOrderInterpreter fakeOrderInterpreter() {
-        return new FakeOrderInterpreter();
     }
 
     @Bean

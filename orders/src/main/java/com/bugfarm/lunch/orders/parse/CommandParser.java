@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Reads the strict message format: the fixed commands and {@code <food type>: <item>[, <notes>]}.
- * Anything else gives {@link Optional#empty()}, meaning the text goes to the AI.
+ * Anything else gives {@link Optional#empty()}; the handler then offers menu suggestions.
  */
 @Component
 public class CommandParser {
