@@ -3,5 +3,6 @@ node_modules/
 dist/
 .idea/
 *.mv.db
-data/
+/data/
+/app/data/
 .superpowers/

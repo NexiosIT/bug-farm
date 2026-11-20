@@ -140,7 +140,7 @@ public interface OrderInterpreter {
 | `POST /login` | form fields `username`, `password` | 200 / 401 |
 | `POST /logout` | – | 200 |
 | `GET /me` | – | `{username}` / 401 |
-| `GET /orders/today` | – | `{date: "2026-11-21", open: bool, cutOff: "10:00", orders: [{id, displayName, foodType, item, notes, placedAt}]}` |
+| `GET /orders/today` | – | `{date: "2026-11-20", open: bool, cutOff: "10:00", orders: [{id, displayName, foodType, item, notes, placedAt}]}` |
 | `DELETE /orders/{id}` | – | 204 / 404 |
 | `GET /menu` | – | `[{id, name, items: [{id, name}]}]` |
 | `POST /menu/food-types` | `{name}` | 201 `{id, name, items: []}` / 409 duplicate |
@@ -405,10 +405,10 @@ Package: `com.bugfarm.lunch.admin`.
   - `EmailDraft EmailDraftBuilder.build(List<Order> orders, LocalDate date, String shopEmail, boolean finalDraft)`, a pure function.
   - `GET /api/admin/email-draft`.
 - Fixed format, English locale:
-  - subject: `Order Lunch, {EEE d MMM}`, e.g. `Order Lunch, Fri 21 Nov`.
+  - subject: `Order Lunch, {EEE d MMM}`, e.g. `Order Lunch, Fri 20 Nov`.
   - body:
     ```
-    Order for Fri 21 Nov
+    Order for Fri 20 Nov
 
     3 × Ham & cheese
     2 × Tuna

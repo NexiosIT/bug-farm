@@ -32,4 +32,13 @@ class InterpretationTest {
         assertThat(i.notes()).isEmpty();
         assertThat(i.reply()).isEmpty();
     }
+
+    @Test
+    void nullStringsBecomeEmpty() {
+        Interpretation i = new Interpretation(Intent.ORDER, null, null, null, null);
+        assertThat(i.foodType()).isEqualTo("");
+        assertThat(i.item()).isEqualTo("");
+        assertThat(i.notes()).isEqualTo("");
+        assertThat(i.reply()).isEqualTo("");
+    }
 }

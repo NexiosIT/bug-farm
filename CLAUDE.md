@@ -30,6 +30,7 @@ A session starts with the developer saying who they are, e.g.
 - `contracts/`
 - the root `pom.xml`, `mvnw`, `mvnw.cmd`, `.mvn/`
 - `.gitignore`
+- `.gitattributes`
 - `README.md`
 - `CLAUDE.md`
 - `docs/`

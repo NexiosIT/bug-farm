@@ -180,7 +180,7 @@ In `contracts`:
 - Implements `MenuCatalog` and `OrderingWindow`. The cut-off is a clock
   check when a message arrives; no scheduled job is needed.
 - Draft email endpoint returns `to`, `subject` (e.g. "Order Lunch, Fri
-  21 Nov") and `body` (plain text):
+  20 Nov") and `body` (plain text):
   1. Summary: each item with a count (e.g. "3 × Ham & cheese").
   2. Per person: name, item, notes, for labelling the bags.
 
@@ -207,7 +207,7 @@ React + TypeScript (Vite). Built against a mock of `openapi.yaml` until the
 real API is ready.
 
 ```
-┌ Lunch orders ─ Fri 21 Nov ──────────── Ordering open until 10:00 ┐
+┌ Lunch orders ─ Fri 20 Nov ──────────── Ordering open until 10:00 ┐
 │ [Today's orders]  [Menu]  [Settings]                              │
 │  Jan Peeters    Sandwich   Ham & cheese      no butter     [x]    │
 │  Lisa Maes      Sandwich   Tuna               —            [x]    │
@@ -216,7 +216,7 @@ real API is ready.
 
 ┌ Draft email ──────────────────────────────────────────────────────┐
 │ To:      orders@sandwichshop.be                         [Copy]    │
-│ Subject: Order Lunch, Fri 21 Nov                        [Copy]    │
+│ Subject: Order Lunch, Fri 20 Nov                        [Copy]    │
 │ ┌───────────────────────────────────────────────────────┐         │
 │ │ 3 × Ham & cheese                                      │ [Copy]  │
 │ │ 2 × Tuna  ...                                         │         │
