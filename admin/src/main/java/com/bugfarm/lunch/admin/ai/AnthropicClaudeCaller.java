@@ -3,10 +3,12 @@ package com.bugfarm.lunch.admin.ai;
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.client.okhttp.AnthropicOkHttpClient;
 import com.anthropic.models.messages.MessageCreateParams;
+import com.anthropic.models.messages.OutputConfig;
 import com.anthropic.models.messages.StopReason;
 import com.anthropic.models.messages.StructuredContentBlock;
 import com.anthropic.models.messages.StructuredMessage;
 import com.anthropic.models.messages.StructuredMessageCreateParams;
+import com.anthropic.models.messages.StructuredOutputConfig;
 import com.anthropic.models.messages.StructuredTextBlock;
 import java.time.Duration;
 import java.util.Optional;
@@ -37,7 +39,10 @@ public class AnthropicClaudeCaller implements ClaudeCaller {
                 .maxTokens(1024L)
                 .system(systemPrompt)
                 .addUserMessage(userText)
-                .outputConfig(AiResult.class)
+                .outputConfig(StructuredOutputConfig.<AiResult>builder()
+                        .format(AiResult.class)
+                        .effort(OutputConfig.Effort.LOW)
+                        .build())
                 .build();
     }
 

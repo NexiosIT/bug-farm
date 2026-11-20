@@ -93,6 +93,47 @@ class AdminApiTest {
                 .andExpect(status().isOk());
     }
 
+    /** The value of the last XSRF-TOKEN cookie set on the response (an earlier one may clear it). */
+    private static String lastXsrfCookie(org.springframework.test.web.servlet.MvcResult result) {
+        Cookie last = null;
+        for (Cookie c : result.getResponse().getCookies()) {
+            if (c.getName().equals("XSRF-TOKEN")) {
+                last = c;
+            }
+        }
+        return last == null ? null : last.getValue();
+    }
+
+    private static RequestPostProcessor xsrf(String token) {
+        return request -> {
+            request.setCookies(new Cookie("XSRF-TOKEN", token));
+            request.addHeader("X-XSRF-TOKEN", token);
+            return request;
+        };
+    }
+
+    @Test
+    void loginAndLogoutHandOutAFreshCsrfTokenThatWorksForTheNextLogin() throws Exception {
+        var login = mvc.perform(post("/api/admin/login").with(xsrf())
+                        .param("username", "manager").param("password", "secret"))
+                .andExpect(status().isOk())
+                .andReturn();
+        String afterLogin = lastXsrfCookie(login);
+        org.assertj.core.api.Assertions.assertThat(afterLogin).isNotBlank().isNotEqualTo("test-token");
+        MockHttpSession session = (MockHttpSession) login.getRequest().getSession();
+
+        var logout = mvc.perform(post("/api/admin/logout").session(session).with(xsrf(afterLogin)))
+                .andExpect(status().isOk())
+                .andReturn();
+        String afterLogout = lastXsrfCookie(logout);
+        org.assertj.core.api.Assertions.assertThat(afterLogout).isNotBlank().isNotEqualTo(afterLogin);
+
+        // What the SPA does next: log in again with the cookie it just received.
+        mvc.perform(post("/api/admin/login").with(xsrf(afterLogout))
+                        .param("username", "manager").param("password", "secret"))
+                .andExpect(status().isOk());
+    }
+
     @Test
     void todayOrdersShowsOpenAndCutOff() throws Exception {
         // AdminTestConfig's clock: Wednesday 2026-11-18, 09:00 in Brussels.

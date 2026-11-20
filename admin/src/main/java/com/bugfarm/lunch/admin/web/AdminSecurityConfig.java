@@ -38,6 +38,7 @@ public class AdminSecurityConfig {
     @Bean
     @Order(2)
     public SecurityFilterChain adminSecurityFilterChain(HttpSecurity http) throws Exception {
+        CookieCsrfTokenRepository csrfTokens = CookieCsrfTokenRepository.withHttpOnlyFalse();
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(LOGIN_URL).permitAll()
@@ -45,17 +46,30 @@ public class AdminSecurityConfig {
                         .anyRequest().permitAll())
                 // The SPA reads the XSRF-TOKEN cookie and sends it back as X-XSRF-TOKEN.
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRepository(csrfTokens)
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                 .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
                 .formLogin(form -> form
                         .loginPage(LOGIN_URL)
                         .loginProcessingUrl(LOGIN_URL)
-                        .successHandler((req, res, auth) -> res.setStatus(HttpStatus.OK.value()))
+                        .successHandler((req, res, auth) -> {
+                            // Login rotated the token and cleared the cookie; loading the new
+                            // token writes the new XSRF-TOKEN cookie on this response.
+                            CsrfToken token = (CsrfToken) req.getAttribute(CsrfToken.class.getName());
+                            if (token != null) {
+                                token.getToken();
+                            }
+                            res.setStatus(HttpStatus.OK.value());
+                        })
                         .failureHandler((req, res, ex) -> res.setStatus(HttpStatus.UNAUTHORIZED.value())))
                 .logout(logout -> logout
                         .logoutUrl("/api/admin/logout")
-                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK)))
+                        .logoutSuccessHandler((req, res, auth) -> {
+                            // Logout cleared the cookie; hand out a fresh token for the next login.
+                            csrfTokens.saveToken(csrfTokens.generateToken(req), req, res);
+                            new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK)
+                                    .onLogoutSuccess(req, res, auth);
+                        }))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
         return http.build();
