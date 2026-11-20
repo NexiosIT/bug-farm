@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { logout, me } from './api'
 import { LoginPage } from './LoginPage'
+import { OrdersPage } from './OrdersPage'
 
 type Tab = 'orders' | 'menu' | 'settings'
 
@@ -68,10 +69,9 @@ export default function App() {
 }
 
 function renderTab(tab: Tab, onUnauthorized: () => void) {
-  void onUnauthorized
   switch (tab) {
     case 'orders':
-      return <p>Today's orders</p>
+      return <OrdersPage onUnauthorized={onUnauthorized} />
     case 'menu':
       return <p>Menu</p>
     case 'settings':

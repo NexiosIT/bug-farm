@@ -62,6 +62,11 @@ export function resetMockData(): void {
   state = initialState()
 }
 
+/** Starts the mock with a logged-in session (used by component tests). */
+export function setMockLoggedIn(loggedIn: boolean): void {
+  state.loggedIn = loggedIn
+}
+
 // The real server sets a readable XSRF-TOKEN cookie on its responses. Mock handlers run
 // in the page (browser) or the test process (jsdom), so set it on document.cookie directly:
 // msw does not apply mocked Set-Cookie headers to document.cookie under Node.

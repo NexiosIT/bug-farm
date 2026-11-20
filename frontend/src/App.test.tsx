@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from './mocks/server'
+import { setMockLoggedIn } from './mocks/handlers'
 import App from './App'
 
 describe('App', () => {
@@ -19,6 +20,21 @@ describe('App', () => {
 
     const tabs = await screen.findAllByRole('tab')
     expect(tabs.map((t) => t.textContent)).toEqual(["Today's orders", 'Menu', 'Settings'])
+  })
+
+  it('ordersTabShowsTodaysOrders', async () => {
+    setMockLoggedIn(true)
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: /Lunch orders/ })).toBeInTheDocument()
+  })
+
+  it('returnsToLoginWhenSessionExpires', async () => {
+    setMockLoggedIn(true)
+    server.use(http.get('/api/admin/orders/today', () => new HttpResponse(null, { status: 401 })))
+    render(<App />)
+
+    expect(await screen.findByRole('button', { name: 'Log in' })).toBeInTheDocument()
   })
 
   it('showsTabsAfterLoggingIn', async () => {
