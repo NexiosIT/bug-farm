@@ -33,7 +33,10 @@ public class OrderHandler {
     static final String EMPTY_MENU = "There is nothing on the menu yet.";
     static final int MAX_NOTES = 500;
 
-    private static final Pattern NUMBER = Pattern.compile("^#?\\s*(\\d)$");
+    /** "1", "#2", "1.", "2!", "１" (any decimal digit), optionally ", new notes". */
+    private static final Pattern NUMBER = Pattern.compile("^#?\\s*(\\p{Nd})\\s*[.!)]*\\s*(?:,(.*))?$", Pattern.DOTALL);
+    /** Starts like a number answer ("1 please"): ask again instead of offering new options. */
+    private static final Pattern STARTS_WITH_NUMBER = Pattern.compile("^#?\\s*\\p{Nd}");
 
     private static final String HELP = String.join("\n\n",
             "Mention me with one of these:",
@@ -68,7 +71,13 @@ public class OrderHandler {
         String text = cleanedText == null ? "" : cleanedText.trim();
         Matcher number = NUMBER.matcher(text);
         if (number.matches()) {
-            return answer(teamsUserId, displayName, Integer.parseInt(number.group(1)));
+            int digit = Character.digit(number.group(1).codePointAt(0), 10);
+            String newNotes = number.group(2) == null ? "" : number.group(2).trim();
+            return answer(teamsUserId, displayName, digit, newNotes);
+        }
+        Optional<OpenChoice> open = choices.find(teamsUserId);
+        if (open.isPresent() && STARTS_WITH_NUMBER.matcher(text).find()) {
+            return "Please answer " + numbers(open.get().options().size()) + ".";
         }
         Optional<Interpretation> parsed = parser.parse(text);
         choices.clear(teamsUserId);
@@ -90,8 +99,8 @@ public class OrderHandler {
         };
     }
 
-    /** A number answering the options this person was offered. */
-    private String answer(String teamsUserId, String displayName, int number) {
+    /** A number answering the options this person was offered; non-blank new notes replace the stored ones. */
+    private String answer(String teamsUserId, String displayName, int number, String newNotes) {
         Optional<OpenChoice> open = choices.find(teamsUserId);
         if (open.isEmpty()) {
             return NO_OPEN_QUESTION;
@@ -108,8 +117,9 @@ public class OrderHandler {
         if (menu.find(picked.foodType(), picked.name()).isEmpty()) {
             return NO_LONGER_ON_MENU;
         }
+        String notes = newNotes.isEmpty() ? open.get().notes() : newNotes;
         return order(teamsUserId, displayName,
-                Interpretation.order(picked.foodType(), picked.name(), open.get().notes()), LocalDate.now(clock));
+                Interpretation.order(picked.foodType(), picked.name(), notes), LocalDate.now(clock));
     }
 
     /** The three menu items most likely meant; text after the first comma is kept as notes. */

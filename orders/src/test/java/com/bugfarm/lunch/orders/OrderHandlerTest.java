@@ -181,6 +181,37 @@ class OrderHandlerTest {
     }
 
     @Test
+    void numberWithTrailingPunctuationIsAnAnswer() {
+        jan("tuna");
+        assertThat(jan("1.")).isEqualTo("Got it, Jan: Sandwich, Tuna");
+
+        jan("tuna");
+        assertThat(jan("2!")).isEqualTo("Got it, Jan: Sandwich, Ham & cheese");
+    }
+
+    @Test
+    void numberWithNotesReplacesTheNotes() {
+        jan("tuna, no butter");
+
+        assertThat(jan("1, extra mayo")).isEqualTo("Got it, Jan: Sandwich, Tuna (extra mayo)");
+    }
+
+    @Test
+    void fullWidthDigitIsAnAnswer() {
+        jan("tuna");
+
+        assertThat(jan("１")).isEqualTo("Got it, Jan: Sandwich, Tuna");
+    }
+
+    @Test
+    void unclearNumberAnswerAsksAgainAndKeepsOptions() {
+        jan("tuna, no butter");
+
+        assertThat(jan("1 please")).isEqualTo("Please answer 1, 2 or 3.");
+        assertThat(jan("1")).isEqualTo("Got it, Jan: Sandwich, Tuna (no butter)");
+    }
+
+    @Test
     void numberWithoutOpenQuestion() {
         assertThat(jan("2")).isEqualTo(NO_OPEN_QUESTION);
         assertThat(saved()).isEmpty();
