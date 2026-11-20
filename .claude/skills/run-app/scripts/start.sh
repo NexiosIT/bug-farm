@@ -114,7 +114,7 @@ wait_backend
 wait_frontend
 
 # 10. Which optional settings the Docker app got from .env (names only, never values).
-for v in ANTHROPIC_API_KEY LUNCH_TEAMS_SECURITY_TOKEN LUNCH_TIME_ZONE; do
+for v in LUNCH_TEAMS_SECURITY_TOKEN LUNCH_TIME_ZONE; do
   if [ -n "$(env_value "$v")" ]; then echo "env $v: set"; else echo "env $v: not set"; fi
 done
 echo "Frontend: http://localhost:$FRONTEND_PORT  Backend: http://localhost:$BACKEND_PORT  Login: admin / admin"

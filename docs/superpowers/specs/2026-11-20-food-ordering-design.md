@@ -186,6 +186,8 @@ In `contracts`:
 
   The draft is built in its own class so automatic sending can reuse it later.
 - Owns menu and settings tables and their migrations.
+- *Replaced on 2026-11-20 by numbered menu suggestions; see
+  `2026-11-20-menu-suggestions-design.md`. The AI part below is no longer built.*
 - Implements `OrderInterpreter` with **Claude Haiku 5.5**
   (`claude-haiku-5-5`) through Anthropic's official Java SDK
   (`com.anthropic`):

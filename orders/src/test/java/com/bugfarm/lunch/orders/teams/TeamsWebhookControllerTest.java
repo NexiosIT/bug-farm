@@ -10,6 +10,8 @@ import com.bugfarm.lunch.orders.JdbcOrderService;
 import com.bugfarm.lunch.orders.OrderHandler;
 import com.bugfarm.lunch.orders.fakes.FakesConfig;
 import com.bugfarm.lunch.orders.parse.CommandParser;
+import com.bugfarm.lunch.orders.suggest.MenuSuggester;
+import com.bugfarm.lunch.orders.suggest.OpenChoices;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import org.junit.jupiter.api.Test;
@@ -22,7 +24,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(controllers = TeamsWebhookController.class,
         properties = "lunch.teams.security-token=" + TeamsWebhookControllerTest.TOKEN)
-@Import({TeamsSecurityConfig.class, FakesConfig.class, CommandParser.class, OrderHandler.class})
+@Import({TeamsSecurityConfig.class, FakesConfig.class, CommandParser.class, MenuSuggester.class, OpenChoices.class,
+        OrderHandler.class})
 class TeamsWebhookControllerTest {
 
     static final String TOKEN = "dGVzdC1zZWNyZXQta2V5LTAxMjM0NTY3ODlhYmNkZWY="; // Base64("test-secret-key-0123456789abcdef")

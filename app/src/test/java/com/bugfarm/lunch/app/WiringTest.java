@@ -6,11 +6,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.bugfarm.lunch.admin.ai.ClaudeOrderInterpreter;
 import com.bugfarm.lunch.admin.menu.JdbcMenuCatalog;
 import com.bugfarm.lunch.admin.settings.SettingsOrderingWindow;
 import com.bugfarm.lunch.contracts.MenuCatalog;
-import com.bugfarm.lunch.contracts.OrderInterpreter;
 import com.bugfarm.lunch.contracts.OrderService;
 import com.bugfarm.lunch.contracts.OrderingWindow;
 import com.bugfarm.lunch.orders.JdbcOrderService;
@@ -37,9 +35,6 @@ class WiringTest {
     private OrderingWindow orderingWindow;
 
     @Autowired
-    private OrderInterpreter orderInterpreter;
-
-    @Autowired
     private MockMvc mvc;
 
     @Test
@@ -47,7 +42,6 @@ class WiringTest {
         assertThat(AopUtils.getTargetClass(orderService)).isEqualTo(JdbcOrderService.class);
         assertThat(AopUtils.getTargetClass(menuCatalog)).isEqualTo(JdbcMenuCatalog.class);
         assertThat(AopUtils.getTargetClass(orderingWindow)).isEqualTo(SettingsOrderingWindow.class);
-        assertThat(AopUtils.getTargetClass(orderInterpreter)).isEqualTo(ClaudeOrderInterpreter.class);
     }
 
     @Test

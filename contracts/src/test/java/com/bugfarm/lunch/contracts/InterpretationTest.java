@@ -8,19 +8,11 @@ class InterpretationTest {
 
     @Test
     void orderFactorySetsIntentAndFields() {
-        Interpretation i = Interpretation.order("Sandwich", "Tuna", "");
+        Interpretation i = Interpretation.order("Sandwich", "Tuna", "no butter");
         assertThat(i.intent()).isEqualTo(Intent.ORDER);
         assertThat(i.foodType()).isEqualTo("Sandwich");
         assertThat(i.item()).isEqualTo("Tuna");
-        assertThat(i.reply()).isEmpty();
-    }
-
-    @Test
-    void unclearCarriesReplyAndBlankItem() {
-        Interpretation i = Interpretation.unclear("x");
-        assertThat(i.intent()).isEqualTo(Intent.UNCLEAR);
-        assertThat(i.reply()).isEqualTo("x");
-        assertThat(i.item()).isEqualTo("");
+        assertThat(i.notes()).isEqualTo("no butter");
     }
 
     @Test
@@ -30,15 +22,19 @@ class InterpretationTest {
         assertThat(i.foodType()).isEmpty();
         assertThat(i.item()).isEmpty();
         assertThat(i.notes()).isEmpty();
-        assertThat(i.reply()).isEmpty();
     }
 
     @Test
     void nullStringsBecomeEmpty() {
-        Interpretation i = new Interpretation(Intent.ORDER, null, null, null, null);
+        Interpretation i = new Interpretation(Intent.ORDER, null, null, null);
         assertThat(i.foodType()).isEqualTo("");
         assertThat(i.item()).isEqualTo("");
         assertThat(i.notes()).isEqualTo("");
-        assertThat(i.reply()).isEqualTo("");
+    }
+
+    @Test
+    void intentsAreTheCommandsAndOrderOnly() {
+        assertThat(Intent.values())
+                .containsExactly(Intent.ORDER, Intent.CANCEL, Intent.MY_ORDER, Intent.MENU, Intent.HELP);
     }
 }
