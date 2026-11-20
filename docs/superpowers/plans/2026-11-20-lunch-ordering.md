@@ -23,7 +23,7 @@ The repo's `CLAUDE.md` enforces these boundaries in every Claude session. Start 
 
 If a task needs a change outside your folders, Claude stops and asks you to raise it with the owner in the Lunch team in Teams. That includes `contracts/` and the parent `pom.xml` after day 1.
 
-Each person works on their own branch: `bert-orders`, `thijs-admin`, `robin-frontend`. Task 14 is Thijs's, because it changes `app/`. All three merge their branches into `main` together and do the live Teams test together.
+Each person works on their own branch: `bert-orders`, `thijs-admin`, `robin-frontend`. Task 14 is Thijs's, because it changes `app/`. All three merge their branches into `develop` together and do the live Teams test together.
 
 Before the first commit, set your Git identity: `git config --global user.name "…"` and `git config --global user.email "…"`.
 
@@ -159,7 +159,7 @@ Unsafe methods send the `X-XSRF-TOKEN` header. Its value is read from the `XSRF-
 - [ ] **Step 2: Run** `./mvnw -q -pl contracts test`. Expected: FAIL (types missing).
 - [ ] **Step 3: Create the types above and `openapi.yaml`.**
 - [ ] **Step 4: Run** `./mvnw -q -pl contracts test`. Expected: PASS. Then check `openapi.yaml` with `npx @redocly/cli lint contracts/openapi.yaml`. Expected: no errors.
-- [ ] **Step 5: Commit** with `git commit -am "feat: shared contracts and admin API description"`, then push. Everyone branches from here.
+- [ ] **Step 5: Commit** with `git commit -am "feat: shared contracts and admin API description"`, then push. Everyone branches from `develop` here.
 
 ---
 
@@ -609,7 +609,7 @@ Package: `com.bugfarm.lunch.admin`.
   - `realImplementationsAreWired`: `OrderService` is `JdbcOrderService`, `MenuCatalog` is `JdbcMenuCatalog`, `OrderingWindow` is `SettingsOrderingWindow`, and `OrderInterpreter` is `ClaudeOrderInterpreter`.
   - `webhookAndAdminChainsBothActive`: a POST to `/api/teams/webhook` without a signature gives 401, not 403. GET `/api/admin/me` gives 401.
 - [ ] **Step 2: Run** `./mvnw -q test`. Expected: FAIL until the branches are merged.
-- [ ] **Step 3: Merge the three branches into `main`, then add the build plugins and `SpaForwardController`.**
+- [ ] **Step 3: Merge the three branches into `develop`, then add the build plugins and `SpaForwardController`.**
 - [ ] **Step 4: Run** `./mvnw -q verify`. Expected: PASS, and `app/target/*.jar` contains `static/index.html` (`jar tf app/target/app-*.jar | grep static/index.html`).
 - [ ] **Step 5: Run a manual check in Teams:**
   1. Start the app: `java -jar app/target/app-*.jar` with the env vars set.
