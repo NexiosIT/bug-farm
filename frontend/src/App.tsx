@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { logout, me } from './api'
 import { LoginPage } from './LoginPage'
+import { MenuPage } from './MenuPage'
 import { OrdersPage } from './OrdersPage'
+import { SettingsPage } from './SettingsPage'
 
 type Tab = 'orders' | 'menu' | 'settings'
 
@@ -73,8 +75,8 @@ function renderTab(tab: Tab, onUnauthorized: () => void) {
     case 'orders':
       return <OrdersPage onUnauthorized={onUnauthorized} />
     case 'menu':
-      return <p>Menu</p>
+      return <MenuPage onUnauthorized={onUnauthorized} />
     case 'settings':
-      return <p>Settings</p>
+      return <SettingsPage onUnauthorized={onUnauthorized} />
   }
 }

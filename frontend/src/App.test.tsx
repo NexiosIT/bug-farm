@@ -29,6 +29,18 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: /Lunch orders/ })).toBeInTheDocument()
   })
 
+  it('menuAndSettingsTabsShowTheirPages', async () => {
+    setMockLoggedIn(true)
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(await screen.findByRole('tab', { name: 'Menu' }))
+    expect(await screen.findByRole('region', { name: 'Sandwich' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: 'Settings' }))
+    expect(await screen.findByLabelText('Cut-off time')).toBeInTheDocument()
+  })
+
   it('returnsToLoginWhenSessionExpires', async () => {
     setMockLoggedIn(true)
     server.use(http.get('/api/admin/orders/today', () => new HttpResponse(null, { status: 401 })))
