@@ -2,7 +2,6 @@ package com.bugfarm.lunch.app;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.bugfarm.lunch.admin.menu.MenuRepository;
 import com.bugfarm.lunch.admin.settings.Settings;
 import com.bugfarm.lunch.admin.settings.SettingsRepository;
 import com.bugfarm.lunch.contracts.MenuCatalog;
@@ -32,9 +31,6 @@ class PostgresMigrationTest {
     private Flyway flyway;
 
     @Autowired
-    private MenuRepository menuRepository;
-
-    @Autowired
     private MenuCatalog menuCatalog;
 
     @Autowired
@@ -45,16 +41,12 @@ class PostgresMigrationTest {
 
     @Test
     void allMigrationsApplyOnPostgres() {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("201");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("202");
         assertThat(flyway.info().pending()).isEmpty();
     }
 
     @Test
     void menuAndSettingsWorkOnPostgres() {
-        long sandwichId = menuRepository.all().stream()
-                .filter(t -> t.name().equals("Sandwich")).findFirst().orElseThrow().id();
-        menuRepository.addItem(sandwichId, "Ham & cheese");
-
         assertThat(menuCatalog.find(" SANDWICH ", "ham & CHEESE")).map(MenuItem::name).contains("Ham & cheese");
 
         settingsRepository.update(new Settings(LocalTime.of(10, 30), "orders@shop.example"));
