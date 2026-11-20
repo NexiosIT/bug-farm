@@ -212,6 +212,19 @@ class AdminApiTest {
     }
 
     @Test
+    void emailDraftUsesFinalFieldAndTodaysOrders() throws Exception {
+        // Clock: Wednesday 09:00 Brussels, before the 10:00 cut-off, so the draft is not final yet.
+        mvc.perform(get("/api/admin/email-draft").with(admin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.final").value(false))
+                .andExpect(jsonPath("$.finalDraft").doesNotExist())
+                .andExpect(jsonPath("$.subject").value("Order Lunch, Wed 18 Nov"))
+                .andExpect(jsonPath("$.to").isString())
+                .andExpect(jsonPath("$.body").value(org.hamcrest.Matchers.endsWith(
+                        "Per person:\nJan Peeters: Ham & cheese (no butter)")));
+    }
+
+    @Test
     void postWithoutCsrfGets403() throws Exception {
         mvc.perform(post("/api/admin/menu/food-types").with(admin())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Pizza\"}"))
