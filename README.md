@@ -15,8 +15,7 @@ email for the sandwich shop.
 - Git
 - Node.js is **not** needed to build the jar: Maven downloads its own copy into
   `app/target`. You only need Node (22.22+ / 24.15+ / 26+) to work on the frontend itself.
-- For the Teams test: [ngrok](https://ngrok.com/) (or VS Code dev tunnels) and an
-  Anthropic API key.
+- For the Teams test: [ngrok](https://ngrok.com/) (or VS Code dev tunnels).
 
 ## Settings (environment variables only)
 
@@ -27,7 +26,6 @@ Never put these in a file in the repo.
 | `LUNCH_TEAMS_SECURITY_TOKEN` | Teams webhook (HMAC check) | the token Teams shows once when you create the webhook |
 | `LUNCH_ADMIN_USERNAME` | admin login | default `admin` |
 | `LUNCH_ADMIN_PASSWORD_HASH` | admin login | BCrypt hash, see below. Empty means nobody can log in. |
-| `ANTHROPIC_API_KEY` | reading free-text messages with Claude | empty → free text gets the fallback reply |
 | `LUNCH_TIME_ZONE` | cut-off and "today" | default `Europe/Brussels` |
 
 ### Making the BCrypt hash for the admin password
@@ -58,14 +56,10 @@ npm --prefix frontend ci                      # once, before the frontend tests
 npm --prefix frontend test -- --run           # frontend tests
 ```
 
-The live Claude test only runs with a key: `./mvnw -q -pl admin -am test -Dgroups=live
--Dtest=AnthropicClaudeCallerLiveTest -Dsurefire.failIfNoSpecifiedTests=false`.
-
 ## Run locally
 
 ```powershell
 $env:LUNCH_ADMIN_PASSWORD_HASH = '$2a$10$...'
-$env:ANTHROPIC_API_KEY = '...'
 $env:LUNCH_TEAMS_SECURITY_TOKEN = '...'
 java -jar app/target/lunch-app-0.0.1-SNAPSHOT.jar
 ```
@@ -126,7 +120,7 @@ The tunnel already runs on your fixed domain, so don't start `ngrok http` yourse
 6. In **Sandwishes**, try:
    - `@SandwichBot menu`
    - `@SandwichBot sandwich: tuna`
-   - `@SandwichBot can I get a ham cheese no butter pls`
+   - `@SandwichBot brie, no butter`, then `@SandwichBot 1`
    - `@SandwichBot my order`
    - `@SandwichBot cancel`
 
@@ -142,7 +136,7 @@ webhook's callback URL in Teams, or create the webhook again and update the toke
 | `my order` | shows your order for today |
 | `cancel` | removes your order for today |
 | `help` | short usage text |
-| anything else | read by Claude; it confirms an order or asks you to try again |
+| anything else | the three closest menu items, numbered |
+| `1`, `2` or `3` | orders that option; answer within 15 minutes, before the cut-off. Text after a comma in your message (`brie, no butter`) becomes the order's notes |
 
-Free-text messages are sent to Anthropic's API together with the menu (never your name or
-Teams id), so don't put other people's details in them.
+Messages stay in the app; nothing is sent to an outside service.

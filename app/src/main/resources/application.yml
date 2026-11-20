@@ -5,9 +5,6 @@ lunch:
   admin:
     username: ${LUNCH_ADMIN_USERNAME:admin}
     password-hash: ${LUNCH_ADMIN_PASSWORD_HASH:}
-  ai:
-    model: claude-haiku-5-5
-    timeout: 3500ms
 
 spring:
   datasource:

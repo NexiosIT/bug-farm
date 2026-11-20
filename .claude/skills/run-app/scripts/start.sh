@@ -89,7 +89,7 @@ wait_for backend $BACKEND_PORT 180
 wait_for frontend $FRONTEND_PORT 60
 
 # 7. Which optional settings are present (names only, never values).
-for v in ANTHROPIC_API_KEY LUNCH_TEAMS_SECURITY_TOKEN LUNCH_TIME_ZONE; do
+for v in LUNCH_TEAMS_SECURITY_TOKEN LUNCH_TIME_ZONE; do
   if [ -n "${!v:-}" ]; then echo "env $v: set"; else echo "env $v: not set"; fi
 done
 echo "Frontend: http://localhost:$FRONTEND_PORT  Backend: http://localhost:$BACKEND_PORT  Login: admin / admin"

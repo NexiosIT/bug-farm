@@ -30,7 +30,6 @@ Run them from the repo root, e.g. `bash .claude/skills/run-app/scripts/start.sh`
    and what the smoke check returned (number of orders today, menu contents, cut-off).
    Also mention from start.sh's `env` lines which optional settings are missing and what
    that means:
-   - `ANTHROPIC_API_KEY` not set -> free-text Teams messages get the fallback reply.
    - `LUNCH_TEAMS_SECURITY_TOKEN` not set -> the Teams webhook can't be tested.
    Say plainly that you only checked the API, not how the screens look, unless you
    actually looked at them.

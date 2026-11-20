@@ -83,7 +83,6 @@ public class OrderHandler {
             case MY_ORDER -> orders.findFor(teamsUserId, today)
                     .map(OrderHandler::describe)
                     .orElse("You have no order yet today.");
-            case UNCLEAR -> meaning.reply();
             case CANCEL -> !isOpen() ? CLOSED
                     : orders.cancel(teamsUserId, today) ? "Your order for today is cancelled."
                     : "You have no order to cancel.";
