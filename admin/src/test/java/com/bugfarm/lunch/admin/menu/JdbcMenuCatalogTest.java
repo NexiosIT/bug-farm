@@ -23,11 +23,17 @@ class JdbcMenuCatalogTest {
     private long sandwichId;
 
     @BeforeEach
-    void addHamAndCheese() {
+    void findSandwich() {
         sandwichId = menu.all().stream()
                 .filter(t -> t.name().equals("Sandwich"))
                 .findFirst().orElseThrow().id();
-        menu.addItem(sandwichId, "Ham & cheese");
+    }
+
+    @Test
+    void freshDatabaseHasFiveDefaultSandwiches() {
+        assertThat(catalog.foodTypes()).containsExactly("Sandwich");
+        assertThat(catalog.itemsFor("Sandwich")).extracting(MenuItem::name)
+                .containsExactly("Cheese", "Chicken curry", "Ham & cheese", "Martino", "Tuna");
     }
 
     @Test
