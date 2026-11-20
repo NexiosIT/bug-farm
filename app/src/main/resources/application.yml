@@ -1,0 +1,16 @@
+lunch:
+  time-zone: ${LUNCH_TIME_ZONE:Europe/Brussels}
+  teams:
+    security-token: ${LUNCH_TEAMS_SECURITY_TOKEN:}
+  admin:
+    username: ${LUNCH_ADMIN_USERNAME:admin}
+    password-hash: ${LUNCH_ADMIN_PASSWORD_HASH:}
+  ai:
+    model: claude-haiku-5-5
+    timeout: 3500ms
+
+spring:
+  datasource:
+    url: jdbc:h2:file:./data/lunch
+  flyway:
+    locations: classpath:db/migration/orders,classpath:db/migration/admin
