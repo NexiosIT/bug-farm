@@ -1,0 +1,2 @@
+# Build artifacts (root .gitignore already covers node_modules/ and dist/)
+*.tsbuildinfo
