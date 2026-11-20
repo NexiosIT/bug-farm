@@ -1,75 +1,73 @@
-import { useEffect, useRef, useState } from 'react'
-import { emailDraft } from './api'
+import { emailDraft, type EmailDraft } from './api'
 import { useApiData } from './useApi'
 
 interface Props {
   onUnauthorized: () => void
 }
 
-type Field = 'To' | 'Subject' | 'Body'
+/** Classic Outlook may truncate mailto: links longer than about 2,000 characters; warn a little before that. */
+const MAILTO_SAFE_LENGTH = 1900
 
-const COPIED_MS = 2000
+/** A mailto: link that opens the mail app with To, Subject and Body filled in. Line breaks are sent as CRLF (RFC 6068). */
+export function mailtoHref(draft: EmailDraft): string {
+  const subject = encodeURIComponent(draft.subject)
+  const body = encodeURIComponent(draft.body.replace(/\r?\n/g, '\r\n'))
+  return `mailto:${draft.to}?subject=${subject}&body=${body}`
+}
 
 export function EmailDraftView({ onUnauthorized }: Props) {
   const { data: draft, error } = useApiData(emailDraft, onUnauthorized)
-  const [copied, setCopied] = useState<Field | null>(null)
-  const [copyError, setCopyError] = useState<string | null>(null)
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-  useEffect(() => () => clearTimeout(timer.current), [])
-
-  async function copy(field: Field, text: string) {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopyError(null)
-      setCopied(field)
-      clearTimeout(timer.current)
-      timer.current = setTimeout(() => setCopied(null), COPIED_MS)
-    } catch {
-      setCopyError('Could not copy. Select the text and copy it by hand.')
-    }
-  }
 
   if (error) return <p role="alert">{error}</p>
   if (!draft) return <p className="quiet draft">Loading draft…</p>
 
-  const copyButton = (field: Field, text: string) => (
-    <button
-      type="button"
-      className={copied === field ? 'btn btn-primary' : 'btn'}
-      aria-label={`Copy ${field}`}
-      onClick={() => void copy(field, text)}
-    >
-      {copied === field ? 'Copied' : 'Copy'}
-    </button>
-  )
+  const hasShopEmail = draft.to.trim() !== ''
+  const href = mailtoHref(draft)
 
   return (
     <section className="draft" aria-label="Draft email">
       <p className="eyebrow">— For the shop</p>
       <h2>Draft email</h2>
+      <div className="draft-actions">
+        {hasShopEmail ? (
+          <>
+            <a className="btn btn-primary" href={href}>
+              Open in Outlook
+            </a>
+            {href.length > MAILTO_SAFE_LENGTH && (
+              <p className="quiet">This email is long; Outlook may cut it off. Check the body before sending.</p>
+            )}
+          </>
+        ) : (
+          <>
+            <button type="button" className="btn btn-primary" disabled>
+              Open in Outlook
+            </button>
+            <p className="quiet">No shop email set. Add it under Settings.</p>
+          </>
+        )}
+      </div>
       {!draft.final && <p className="callout">Ordering is still open — orders may still change.</p>}
       <dl className="info-grid">
         <div className="info-row">
           <dt>To</dt>
           <dd>
-            <span>{draft.to}</span> {copyButton('To', draft.to)}
+            <span>{draft.to}</span>
           </dd>
         </div>
         <div className="info-row">
           <dt>Subject</dt>
           <dd>
-            <span>{draft.subject}</span> {copyButton('Subject', draft.subject)}
+            <span>{draft.subject}</span>
           </dd>
         </div>
         <div className="info-row">
           <dt>Body</dt>
           <dd>
-            <pre>{draft.body}</pre> {copyButton('Body', draft.body)}
+            <pre>{draft.body}</pre>
           </dd>
         </div>
       </dl>
-      {copyError && <p role="alert">{copyError}</p>}
     </section>
   )
 }
