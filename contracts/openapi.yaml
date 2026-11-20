@@ -152,6 +152,7 @@ paths:
       tags: [Menu]
       operationId: createFoodType
       summary: Add a food type
+      description: Names are trimmed before saving. Food-type names are unique overall, compared case-insensitive after trimming (409 on a duplicate). An empty or whitespace-only name gives 400.
       parameters:
         - $ref: '#/components/parameters/XsrfToken'
       requestBody:
@@ -173,6 +174,8 @@ paths:
                 id: 3
                 name: Salad
                 items: []
+        '400':
+          $ref: '#/components/responses/BlankName'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '409':
@@ -184,6 +187,7 @@ paths:
       tags: [Menu]
       operationId: renameFoodType
       summary: Rename a food type
+      description: Names are trimmed before saving. Food-type names are unique overall, compared case-insensitive after trimming (409 on a duplicate). Renaming to its own current name, in any case ("tuna" to "Tuna"), is not a conflict. An empty or whitespace-only name gives 400.
       parameters:
         - $ref: '#/components/parameters/XsrfToken'
       requestBody:
@@ -205,6 +209,8 @@ paths:
                 id: 3
                 name: Wraps
                 items: []
+        '400':
+          $ref: '#/components/responses/BlankName'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -227,6 +233,7 @@ paths:
       tags: [Menu]
       operationId: createItem
       summary: Add an item to a food type
+      description: Names are trimmed before saving. Item names are unique within their food type, compared case-insensitive after trimming (409 on a duplicate); the same name under two food types is allowed. An empty or whitespace-only name gives 400.
       parameters:
         - $ref: '#/components/parameters/MenuId'
         - $ref: '#/components/parameters/XsrfToken'
@@ -248,6 +255,8 @@ paths:
               example:
                 id: 13
                 name: Chicken curry
+        '400':
+          $ref: '#/components/responses/BlankName'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -261,6 +270,7 @@ paths:
       tags: [Menu]
       operationId: renameItem
       summary: Rename an item
+      description: Names are trimmed before saving. Item names are unique within their food type, compared case-insensitive after trimming (409 on a duplicate). Renaming to its own current name, in any case, is not a conflict. An empty or whitespace-only name gives 400.
       parameters:
         - $ref: '#/components/parameters/XsrfToken'
       requestBody:
@@ -281,6 +291,8 @@ paths:
               example:
                 id: 12
                 name: Tuna mayo
+        '400':
+          $ref: '#/components/responses/BlankName'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -408,8 +420,21 @@ components:
       description: Not logged in.
     NotFound:
       description: Not found.
+    BlankName:
+      description: The name is empty or whitespace-only after trimming.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Name must not be blank
     Conflict:
-      description: A food type or item with that name already exists.
+      description: >-
+        Another food type (for food types) or another item in the same food type
+        (for items) already has that name. Names are compared case-insensitive
+        after trimming, so "Tuna" and "tuna" conflict. The same item name under
+        two different food types is allowed. Renaming an entity to its own
+        current name, in any case, is not a conflict.
       content:
         application/json:
           schema:
@@ -503,7 +528,7 @@ components:
       properties:
         name:
           type: string
-          minLength: 1
+          description: Trimmed by the server before saving; must not be empty or whitespace-only.
     Settings:
       type: object
       required: [cutOff, shopEmail]
