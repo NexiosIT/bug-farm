@@ -51,6 +51,24 @@ describe('EmailDraftView', () => {
     expect(screen.getByText('No shop email set. Add it under Settings.')).toBeInTheDocument()
   })
 
+  it('warnsWhenEmailMayBeCutOff', async () => {
+    const longBody = 'Anna de Vries: Ham & cheese\n'.repeat(60)
+    server.use(http.get('/api/admin/email-draft', () => HttpResponse.json({ ...draft, body: longBody })))
+    render(<EmailDraftView onUnauthorized={vi.fn()} />)
+
+    expect(await screen.findByRole('link', { name: 'Open in Outlook' })).toBeInTheDocument()
+    expect(
+      screen.getByText('This email is long; Outlook may cut it off. Check the body before sending.'),
+    ).toBeInTheDocument()
+  })
+
+  it('noLengthWarningForNormalEmail', async () => {
+    render(<EmailDraftView onUnauthorized={vi.fn()} />)
+
+    expect(await screen.findByRole('link', { name: 'Open in Outlook' })).toBeInTheDocument()
+    expect(screen.queryByText(/Outlook may cut it off/)).not.toBeInTheDocument()
+  })
+
   it('showsStillOpenNoteWhenNotFinal', async () => {
     render(<EmailDraftView onUnauthorized={vi.fn()} />)
 

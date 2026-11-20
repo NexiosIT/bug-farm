@@ -5,6 +5,9 @@ interface Props {
   onUnauthorized: () => void
 }
 
+/** Classic Outlook may truncate mailto: links longer than about 2,000 characters; warn a little before that. */
+const MAILTO_SAFE_LENGTH = 1900
+
 /** A mailto: link that opens the mail app with To, Subject and Body filled in. Line breaks are sent as CRLF (RFC 6068). */
 export function mailtoHref(draft: EmailDraft): string {
   const subject = encodeURIComponent(draft.subject)
@@ -19,23 +22,31 @@ export function EmailDraftView({ onUnauthorized }: Props) {
   if (!draft) return <p className="quiet draft">Loading draft…</p>
 
   const hasShopEmail = draft.to.trim() !== ''
+  const href = mailtoHref(draft)
 
   return (
     <section className="draft" aria-label="Draft email">
       <p className="eyebrow">— For the shop</p>
       <h2>Draft email</h2>
-      {hasShopEmail ? (
-        <a className="btn btn-primary" href={mailtoHref(draft)}>
-          Open in Outlook
-        </a>
-      ) : (
-        <>
-          <button type="button" className="btn btn-primary" disabled>
-            Open in Outlook
-          </button>
-          <p className="quiet">No shop email set. Add it under Settings.</p>
-        </>
-      )}
+      <div className="draft-actions">
+        {hasShopEmail ? (
+          <>
+            <a className="btn btn-primary" href={href}>
+              Open in Outlook
+            </a>
+            {href.length > MAILTO_SAFE_LENGTH && (
+              <p className="quiet">This email is long; Outlook may cut it off. Check the body before sending.</p>
+            )}
+          </>
+        ) : (
+          <>
+            <button type="button" className="btn btn-primary" disabled>
+              Open in Outlook
+            </button>
+            <p className="quiet">No shop email set. Add it under Settings.</p>
+          </>
+        )}
+      </div>
       {!draft.final && <p className="callout">Ordering is still open — orders may still change.</p>}
       <dl className="info-grid">
         <div className="info-row">
