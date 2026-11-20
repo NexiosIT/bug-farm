@@ -1,0 +1,8 @@
+target/
+node_modules/
+dist/
+.idea/
+*.mv.db
+/data/
+/app/data/
+.superpowers/

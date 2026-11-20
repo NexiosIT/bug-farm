@@ -1,0 +1,589 @@
+openapi: 3.0.3
+info:
+  title: Lunch ordering admin API
+  version: 1.0.0
+  description: |
+    Admin API for the lunch ordering app. Every path is served under `/api/admin`
+    and requires the session cookie (`JSESSIONID`), except `POST /login`.
+
+    CSRF protection: every unsafe method (POST, PUT, DELETE), including
+    `POST /login`, must send the `X-XSRF-TOKEN` header, with the value of the
+    `XSRF-TOKEN` cookie. The server sets that cookie on its responses, also on
+    the 401 from `GET /me`, so a fresh client calls `GET /me` first to get it.
+    The token changes after login and after logout, so the client reads the
+    cookie again before every unsafe request. A missing or invalid token gives
+    403.
+
+    Times are `"HH:mm"` strings, dates are ISO `YYYY-MM-DD`, `placedAt` is an
+    ISO-8601 instant. Order ids are UUIDs, menu ids are integers.
+servers:
+  - url: /api/admin
+security:
+  - sessionCookie: []
+tags:
+  - name: Session
+  - name: Orders
+  - name: Menu
+  - name: Settings
+paths:
+  /login:
+    post:
+      tags: [Session]
+      operationId: login
+      summary: Log in and start a session
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/XsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginForm'
+            example:
+              username: admin
+              password: secret
+      responses:
+        '200':
+          description: Logged in. The session cookie is set.
+        '401':
+          description: Wrong username or password.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /logout:
+    post:
+      tags: [Session]
+      operationId: logout
+      summary: End the session
+      parameters:
+        - $ref: '#/components/parameters/XsrfToken'
+      responses:
+        '200':
+          description: Logged out.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /me:
+    get:
+      tags: [Session]
+      operationId: me
+      summary: The logged-in user
+      responses:
+        '200':
+          description: The current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+              example:
+                username: admin
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /orders/today:
+    get:
+      tags: [Orders]
+      operationId: ordersToday
+      summary: Today's orders, with the ordering window state
+      description: Orders are sorted by displayName.
+      responses:
+        '200':
+          description: Today's orders.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodayOrders'
+              example:
+                date: '2026-11-20'
+                open: true
+                cutOff: '10:00'
+                orders:
+                  - id: 3f2b8c1e-5a47-4d0e-9b1a-7c6d2e8f4a10
+                    displayName: Anna de Vries
+                    foodType: Sandwich
+                    item: Tuna
+                    notes: no onions
+                    placedAt: '2026-11-20T08:15:30Z'
+                  - id: 9a1d4e77-2c3b-4f58-8e60-1b5a0d7c3e92
+                    displayName: Bram Jansen
+                    foodType: Sandwich
+                    item: Ham & cheese
+                    notes: ''
+                    placedAt: '2026-11-20T08:42:05Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /orders/{id}:
+    delete:
+      tags: [Orders]
+      operationId: deleteOrder
+      summary: Delete an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Order id.
+          schema:
+            type: string
+            format: uuid
+          example: 3f2b8c1e-5a47-4d0e-9b1a-7c6d2e8f4a10
+        - $ref: '#/components/parameters/XsrfToken'
+      responses:
+        '204':
+          description: Deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /menu:
+    get:
+      tags: [Menu]
+      operationId: getMenu
+      summary: The whole menu
+      responses:
+        '200':
+          description: All food types with their items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FoodType'
+              example:
+                - id: 1
+                  name: Sandwich
+                  items:
+                    - id: 11
+                      name: Ham & cheese
+                    - id: 12
+                      name: Tuna
+                - id: 2
+                  name: Soup
+                  items: []
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /menu/food-types:
+    post:
+      tags: [Menu]
+      operationId: createFoodType
+      summary: Add a food type
+      description: Names are trimmed before saving. Food-type names are unique overall, compared case-insensitive after trimming (409 on a duplicate). An empty or whitespace-only name gives 400, and so does a food-type name over 100 characters.
+      parameters:
+        - $ref: '#/components/parameters/XsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NameRequest'
+            example:
+              name: Salad
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FoodType'
+              example:
+                id: 3
+                name: Salad
+                items: []
+        '400':
+          $ref: '#/components/responses/InvalidName'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /menu/food-types/{id}:
+    parameters:
+      - $ref: '#/components/parameters/MenuId'
+    put:
+      tags: [Menu]
+      operationId: renameFoodType
+      summary: Rename a food type
+      description: Names are trimmed before saving. Food-type names are unique overall, compared case-insensitive after trimming (409 on a duplicate). Renaming to its own current name, in any case ("tuna" to "Tuna"), is not a conflict. An empty or whitespace-only name gives 400, and so does a food-type name over 100 characters.
+      parameters:
+        - $ref: '#/components/parameters/XsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NameRequest'
+            example:
+              name: Wraps
+      responses:
+        '200':
+          description: Renamed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FoodType'
+              example:
+                id: 3
+                name: Wraps
+                items: []
+        '400':
+          $ref: '#/components/responses/InvalidName'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [Menu]
+      operationId: deleteFoodType
+      summary: Delete a food type and all its items
+      parameters:
+        - $ref: '#/components/parameters/XsrfToken'
+      responses:
+        '204':
+          description: Deleted, including its items.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /menu/food-types/{id}/items:
+    post:
+      tags: [Menu]
+      operationId: createItem
+      summary: Add an item to a food type
+      description: Names are trimmed before saving. Item names are unique within their food type, compared case-insensitive after trimming (409 on a duplicate); the same name under two food types is allowed. An empty or whitespace-only name gives 400, and so does an item name over 200 characters.
+      parameters:
+        - $ref: '#/components/parameters/MenuId'
+        - $ref: '#/components/parameters/XsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NameRequest'
+            example:
+              name: Chicken curry
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+              example:
+                id: 13
+                name: Chicken curry
+        '400':
+          $ref: '#/components/responses/InvalidName'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /menu/items/{id}:
+    parameters:
+      - $ref: '#/components/parameters/MenuId'
+    put:
+      tags: [Menu]
+      operationId: renameItem
+      summary: Rename an item
+      description: Names are trimmed before saving. Item names are unique within their food type, compared case-insensitive after trimming (409 on a duplicate). Renaming to its own current name, in any case, is not a conflict. An empty or whitespace-only name gives 400, and so does an item name over 200 characters.
+      parameters:
+        - $ref: '#/components/parameters/XsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NameRequest'
+            example:
+              name: Tuna mayo
+      responses:
+        '200':
+          description: Renamed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+              example:
+                id: 12
+                name: Tuna mayo
+        '400':
+          $ref: '#/components/responses/InvalidName'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [Menu]
+      operationId: deleteItem
+      summary: Delete an item
+      parameters:
+        - $ref: '#/components/parameters/XsrfToken'
+      responses:
+        '204':
+          description: Deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /settings:
+    get:
+      tags: [Settings]
+      operationId: getSettings
+      summary: Current settings
+      responses:
+        '200':
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+              example:
+                cutOff: '10:00'
+                shopEmail: orders@sandwichshop.example
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      tags: [Settings]
+      operationId: updateSettings
+      summary: Update settings
+      parameters:
+        - $ref: '#/components/parameters/XsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settings'
+            example:
+              cutOff: '10:30'
+              shopEmail: orders@sandwichshop.example
+      responses:
+        '200':
+          description: Saved. Returns the stored settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+              example:
+                cutOff: '10:30'
+                shopEmail: orders@sandwichshop.example
+        '400':
+          description: 'Invalid cut-off time or e-mail address. The error has the form "<field>: <reason>".'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'cutOff: must be HH:mm'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /email-draft:
+    get:
+      tags: [Orders]
+      operationId: emailDraft
+      summary: The e-mail to the shop with today's orders
+      responses:
+        '200':
+          description: The draft. `final` is true once ordering has closed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailDraft'
+              example:
+                to: orders@sandwichshop.example
+                subject: Order Lunch, Fri 20 Nov
+                body: "Order for Fri 20 Nov\n\n3 × Ham & cheese\n2 × Tuna\n\nPer person:\nJan Peeters: Ham & cheese (no butter)\nLisa Maes: Tuna"
+                final: false
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+      description: Session cookie set by `POST /login`.
+  parameters:
+    XsrfToken:
+      name: X-XSRF-TOKEN
+      in: header
+      required: true
+      description: Value of the `XSRF-TOKEN` cookie. Required on unsafe methods.
+      schema:
+        type: string
+      example: 6b0e2c1a-8f3d-4a57-9c21-d4e5f6a7b8c9
+    MenuId:
+      name: id
+      in: path
+      required: true
+      description: Menu id.
+      schema:
+        type: integer
+        format: int64
+      example: 3
+  responses:
+    Unauthorized:
+      description: Not logged in.
+    Forbidden:
+      description: The `X-XSRF-TOKEN` header is missing or does not match the `XSRF-TOKEN` cookie.
+    NotFound:
+      description: Not found.
+    InvalidName:
+      description: The name is empty or whitespace-only after trimming, or too long (food-type names over 100 characters, item names over 200).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Name must not be blank
+    Conflict:
+      description: >-
+        Another food type (for food types) or another item in the same food type
+        (for items) already has that name. Names are compared case-insensitive
+        after trimming, so "Tuna" and "tuna" conflict. The same item name under
+        two different food types is allowed. Renaming an entity to its own
+        current name, in any case, is not a conflict.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Name already exists
+  schemas:
+    LoginForm:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+    Me:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    TodayOrders:
+      type: object
+      required: [date, open, cutOff, orders]
+      properties:
+        date:
+          type: string
+          format: date
+        open:
+          type: boolean
+          description: Whether ordering is currently open.
+        cutOff:
+          type: string
+          pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+          description: Cut-off time as HH:mm.
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderView'
+    OrderView:
+      type: object
+      required: [id, displayName, foodType, item, notes, placedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        foodType:
+          type: string
+        item:
+          type: string
+        notes:
+          type: string
+          description: Empty string when there are none.
+        placedAt:
+          type: string
+          format: date-time
+    FoodType:
+      type: object
+      required: [id, name, items]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+    Item:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    NameRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          description: Trimmed by the server before saving; must not be empty or whitespace-only. Food-type names longer than 100 characters and item names longer than 200 characters give 400.
+    Settings:
+      type: object
+      required: [cutOff, shopEmail]
+      properties:
+        cutOff:
+          type: string
+          pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+          description: Cut-off time as HH:mm.
+        shopEmail:
+          description: >-
+            The shop's e-mail address. The empty string `""` means "not set"
+            and is valid; a fresh install returns `""`. PUT accepts `""` or a
+            valid e-mail address.
+          anyOf:
+            - type: string
+              format: email
+            - type: string
+              maxLength: 0
+          example: ''
+    EmailDraft:
+      type: object
+      required: [to, subject, body, final]
+      properties:
+        to:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+        final:
+          type: boolean
+          description: True once ordering has closed, so the draft will not change.

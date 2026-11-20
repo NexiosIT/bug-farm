@@ -23,7 +23,7 @@ The repo's `CLAUDE.md` enforces these boundaries in every Claude session. Start 
 
 If a task needs a change outside your folders, Claude stops and asks you to raise it with the owner in the Lunch team in Teams. That includes `contracts/` and the parent `pom.xml` after day 1.
 
-Each person works on their own branch: `bert-orders`, `thijs-admin`, `robin-frontend`. Task 14 is Thijs's, because it changes `app/`. All three merge their branches into `main` together and do the live Teams test together.
+Each person works on their own branch: `bert-orders`, `thijs-admin`, `robin-frontend`. Task 14 is Thijs's, because it changes `app/`. All three merge their branches into `develop` together and do the live Teams test together.
 
 Before the first commit, set your Git identity: `git config --global user.name "…"` and `git config --global user.email "…"`.
 
@@ -140,7 +140,7 @@ public interface OrderInterpreter {
 | `POST /login` | form fields `username`, `password` | 200 / 401 |
 | `POST /logout` | – | 200 |
 | `GET /me` | – | `{username}` / 401 |
-| `GET /orders/today` | – | `{date: "2026-11-21", open: bool, cutOff: "10:00", orders: [{id, displayName, foodType, item, notes, placedAt}]}` |
+| `GET /orders/today` | – | `{date: "2026-11-20", open: bool, cutOff: "10:00", orders: [{id, displayName, foodType, item, notes, placedAt}]}` |
 | `DELETE /orders/{id}` | – | 204 / 404 |
 | `GET /menu` | – | `[{id, name, items: [{id, name}]}]` |
 | `POST /menu/food-types` | `{name}` | 201 `{id, name, items: []}` / 409 duplicate |
@@ -159,7 +159,7 @@ Unsafe methods send the `X-XSRF-TOKEN` header. Its value is read from the `XSRF-
 - [ ] **Step 2: Run** `./mvnw -q -pl contracts test`. Expected: FAIL (types missing).
 - [ ] **Step 3: Create the types above and `openapi.yaml`.**
 - [ ] **Step 4: Run** `./mvnw -q -pl contracts test`. Expected: PASS. Then check `openapi.yaml` with `npx @redocly/cli lint contracts/openapi.yaml`. Expected: no errors.
-- [ ] **Step 5: Commit** with `git commit -am "feat: shared contracts and admin API description"`, then push. Everyone branches from here.
+- [ ] **Step 5: Commit** with `git commit -am "feat: shared contracts and admin API description"`, then push. Everyone branches from `develop` here.
 
 ---
 
@@ -405,10 +405,10 @@ Package: `com.bugfarm.lunch.admin`.
   - `EmailDraft EmailDraftBuilder.build(List<Order> orders, LocalDate date, String shopEmail, boolean finalDraft)`, a pure function.
   - `GET /api/admin/email-draft`.
 - Fixed format, English locale:
-  - subject: `Order Lunch, {EEE d MMM}`, e.g. `Order Lunch, Fri 21 Nov`.
+  - subject: `Order Lunch, {EEE d MMM}`, e.g. `Order Lunch, Fri 20 Nov`.
   - body:
     ```
-    Order for Fri 21 Nov
+    Order for Fri 20 Nov
 
     3 × Ham & cheese
     2 × Tuna
@@ -609,7 +609,7 @@ Package: `com.bugfarm.lunch.admin`.
   - `realImplementationsAreWired`: `OrderService` is `JdbcOrderService`, `MenuCatalog` is `JdbcMenuCatalog`, `OrderingWindow` is `SettingsOrderingWindow`, and `OrderInterpreter` is `ClaudeOrderInterpreter`.
   - `webhookAndAdminChainsBothActive`: a POST to `/api/teams/webhook` without a signature gives 401, not 403. GET `/api/admin/me` gives 401.
 - [ ] **Step 2: Run** `./mvnw -q test`. Expected: FAIL until the branches are merged.
-- [ ] **Step 3: Merge the three branches into `main`, then add the build plugins and `SpaForwardController`.**
+- [ ] **Step 3: Merge the three branches into `develop`, then add the build plugins and `SpaForwardController`.**
 - [ ] **Step 4: Run** `./mvnw -q verify`. Expected: PASS, and `app/target/*.jar` contains `static/index.html` (`jar tf app/target/app-*.jar | grep static/index.html`).
 - [ ] **Step 5: Run a manual check in Teams:**
   1. Start the app: `java -jar app/target/app-*.jar` with the env vars set.

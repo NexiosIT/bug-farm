@@ -30,6 +30,7 @@ A session starts with the developer saying who they are, e.g.
 - `contracts/`
 - the root `pom.xml`, `mvnw`, `mvnw.cmd`, `.mvn/`
 - `.gitignore`
+- `.gitattributes`
 - `README.md`
 - `CLAUDE.md`
 - `docs/`
@@ -68,8 +69,8 @@ a shared file outside a joint session:
 
 ## Working conventions
 
-- Each developer works on their own branch: `bert-orders`, `thijs-admin`,
-  `robin-frontend`. Merging to `main` happens together (Task 14).
+- Each developer works on their own branch, made from `develop`: `bert-orders`, `thijs-admin`,
+  `robin-frontend`. Merging to `develop` happens together (Task 14).
 - Tests come first, as the plan describes. Backend: `./mvnw -q test`.
   Frontend: `npm --prefix frontend test -- --run`.
 - Secrets come only from environment variables (see the plan's Global
