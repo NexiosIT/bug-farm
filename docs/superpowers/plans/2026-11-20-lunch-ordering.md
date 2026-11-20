@@ -36,6 +36,7 @@ Before the first commit, set your Git identity: `git config --global user.name "
 - Secrets and settings come from environment variables only: `LUNCH_TEAMS_SECURITY_TOKEN`, `LUNCH_ADMIN_USERNAME`, `LUNCH_ADMIN_PASSWORD_HASH` (BCrypt), `ANTHROPIC_API_KEY`, `LUNCH_TIME_ZONE` (default `Europe/Brussels`).
 - One shared `java.time.Clock` bean in `app`, using `LUNCH_TIME_ZONE`. "Today" is always `LocalDate.now(clock)`. Never use the server's default zone.
 - Ordering is open on Monday to Friday only, before the cut-off. Default cut-off is `10:00`.
+- *Replaced on 2026-11-20: the Claude fallback is gone; see `docs/superpowers/plans/2026-11-20-menu-suggestions.md` and its design. Do not build the AI part below.* (`ANTHROPIC_API_KEY`, the AI model line and the AI fallback reply no longer apply.)
 - AI: model `claude-haiku-5-5`. Send only the message text and today's menu, never a name or Teams id. Time limit 3.5 s, 0 retries.
 - Fixed reply texts:
   - Closed: `Ordering is closed for today.`
@@ -261,6 +262,8 @@ Table `orders`:
 
 ### Task 6: Handling a message and replying to Teams
 
+> *Since 2026-11-20 unrecognised messages get numbered menu suggestions instead of the AI; see `2026-11-20-menu-suggestions.md`.*
+
 **Owner:** Bert. Changes only `orders/`.
 
 **Files:**
@@ -435,6 +438,8 @@ Package: `com.bugfarm.lunch.admin`.
 
 ### Task 10: AI fallback with Claude Haiku 5.5
 
+> *Replaced on 2026-11-20: the Claude fallback is gone; see `docs/superpowers/plans/2026-11-20-menu-suggestions.md` and its design. Do not build the AI part below.*
+
 **Owner:** Thijs. Changes only `admin/`.
 
 **Files:**
@@ -606,7 +611,7 @@ Package: `com.bugfarm.lunch.admin`.
 - Consumes: everything above.
 
 - [ ] **Step 1: Write the `WiringTest` tests** (`@SpringBootTest`):
-  - `realImplementationsAreWired`: `OrderService` is `JdbcOrderService`, `MenuCatalog` is `JdbcMenuCatalog`, `OrderingWindow` is `SettingsOrderingWindow`, and `OrderInterpreter` is `ClaudeOrderInterpreter`.
+  - `realImplementationsAreWired`: `OrderService` is `JdbcOrderService`, `MenuCatalog` is `JdbcMenuCatalog`, `OrderingWindow` is `SettingsOrderingWindow`, and `OrderInterpreter` is `ClaudeOrderInterpreter`. *(Dropped on 2026-11-20 with the Claude fallback.)*
   - `webhookAndAdminChainsBothActive`: a POST to `/api/teams/webhook` without a signature gives 401, not 403. GET `/api/admin/me` gives 401.
 - [ ] **Step 2: Run** `./mvnw -q test`. Expected: FAIL until the branches are merged.
 - [ ] **Step 3: Merge the three branches into `develop`, then add the build plugins and `SpaForwardController`.**
