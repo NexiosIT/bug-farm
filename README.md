@@ -51,7 +51,7 @@ $env:LUNCH_ADMIN_PASSWORD_HASH = '$2a$10$...'
 
 ```bash
 ./mvnw -q verify                              # backend tests + frontend build, makes app/target/lunch-app-*.jar
-./mvnw -q test -Dskip.npm -Dskip.installnodenpm   # backend tests only, faster
+./mvnw -q test                                # backend tests only (about a minute; no frontend build)
 npm --prefix frontend ci                      # once, before the frontend tests
 npm --prefix frontend test -- --run           # frontend tests
 ```
